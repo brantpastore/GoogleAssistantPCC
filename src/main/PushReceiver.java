@@ -1,9 +1,11 @@
 package main;
 
 import main.net.iharder.jpushbullet2.*;
+import main.util.FileHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -14,18 +16,20 @@ import java.util.List;
  * Make AccessToken variable load from a config file
  */
 public class PushReceiver implements PushbulletListener {
-    private static final String AccessToken = "--REDACTED--";
+    private static String AccessToken = "";
     private static final Logger prLogger = LoggerFactory.getLogger(PushReceiver.class);
     private static CommandController cController = null;
 
-    public PushReceiver(CommandController cControl) {
+    public PushReceiver(CommandController cControl, FileHandler fHandler) {
         try {
             cController = cControl;
+            AccessToken = fHandler.GetAPIKey();
             StartListening();
         } catch (InterruptedException e) {
+            prLogger.info(e.getMessage());
         }
         catch (PushbulletException e) {
-
+            prLogger.info(e.getMessage());
         }
     }
 
