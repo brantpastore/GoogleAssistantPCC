@@ -1,6 +1,8 @@
 # GoogleAssistantPCC
 An open source PC controller using Google Assistant.
 
+https://travis-ci.org/brantpastore/GoogleAssistantPCC.svg?branch=master
+
 
 Setup
 Create a https://www.pushbullet.com/ account.
