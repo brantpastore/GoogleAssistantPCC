@@ -1,7 +1,6 @@
 # GoogleAssistantPCC
 An open source PC controller using Google Assistant.
 
-
 Setup
 Create a https://www.pushbullet.com/ account.
 Go to Settings
