@@ -1,4 +1,4 @@
-package main.net.iharder.jpushbullet2;
+package main.jpushbullet2;
 
 /**
  * Used for callbacks when doing async pushes. The single method
@@ -27,5 +27,5 @@ public interface Callback<T> {
      * @param ex The {@link PushbulletException} thrown if there was
      * trouble or null otherwise.
      */
-    public abstract void completed( T result, PushbulletException ex );
+    public abstract void completed(T result, PushbulletException ex);
 }

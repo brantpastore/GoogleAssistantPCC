@@ -58,4 +58,4 @@
  * @author rob@iharder.net
  * @version 0.2
  */
-package main.net.iharder.jpushbullet2;
+package main.jpushbullet2;

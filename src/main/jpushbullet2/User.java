@@ -1,5 +1,5 @@
 
-package main.net.iharder.jpushbullet2;
+package main.jpushbullet2;
 
 import java.lang.reflect.Field;
 

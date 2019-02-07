@@ -6,19 +6,27 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * FileHandler
  * Loads settings file (which contains what windows control commands are enabled)
- * Loads user defined applications
+ * Loads user defined triggers (aswell as the path to executable)
  */
 public class FileHandler {
     private static Logger fLogger = LoggerFactory.getLogger(FileHandler.class);
@@ -27,99 +35,395 @@ public class FileHandler {
 
     private DocumentBuilderFactory settingsFactory;
     private DocumentBuilder dBuilder;
-    private Document doc;
+    private static Document doc;
 
-    private String API_KEY = "";
+    private static String API_KEY = "";
     // TODO:
     // Change the config location to the directory our application is located
-    private String settings = "C:/GAPCC/settings.cfg";
+    private static String settingsFilePath = "src//deps//settings.cfg";
     public static Map<String, String> winCommands = new HashMap<>();
     public static Map<String, String> appList = new HashMap<>();
 
+    /**
+     * FileHandler()
+     * Initialize DOM
+     * Read API Key
+     * ReadWindowsSettings
+     * ReadApplications
+     */
     public FileHandler() {
         try {
-            inputFile = new File(this.settings);
             settingsFactory = DocumentBuilderFactory.newInstance();
             dBuilder = settingsFactory.newDocumentBuilder();
-            doc = dBuilder.parse(inputFile);
+
+            inputFile = new File(settingsFilePath);
+
+            if (inputFile.exists() == false) {
+                doc = dBuilder.newDocument();
+                CreateDefaultSettings();
+            } else {
+                doc = dBuilder.parse(inputFile);
+                ReadAPIKey();
+                ReadWindowsSettings();
+                ReadApplications();
+            }
+
             doc.getDocumentElement().normalize();
-        } catch (Exception e) {
+        } catch (ParserConfigurationException | IOException | SAXException e) {
             fLogger.info(e.getMessage());
         }
 
-        ReadConfig();
-        ReadWindowsSetting();
+        ReadWindowsSettings();
         ReadApplications();
     }
 
-    public Map getAppList() {
+    /**
+     * GetAppList
+     * @return
+     */
+    public Map GetAppList() {
         return appList;
     }
 
-    public Map getWinCommands() {
+    /**
+     * GetWinCommands
+     * @return
+     */
+    public Map GetWinCommands() {
         return winCommands;
     }
 
-    public void SetAPIKey(String key) {
-        this.API_KEY = key;
-    }
-
-    public String GetAPIKey() {
-        return API_KEY;
-    }
-
-    public void ReadConfig() {
+    /**
+     * SetAPIKey
+     * @param key
+     *
+     * Sets the variable API_KEY
+     * Writes the key into the settings file
+     */
+    public static void SetAPIKey(String key) {
         try {
-            fLogger.info("parsing settings file..");
+            fLogger.info("setting API Key...");
 
-            NodeList settingsList = doc.getElementsByTagName("config");
-
-            for (int index = 0; index < settingsList.getLength(); index++) {
-                Node nNode = settingsList.item(index);
-
-                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-                    Element eElement = (Element) nNode;
-                    SetAPIKey(eElement.getElementsByTagName("API_KEY").item(0).getTextContent());
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void ReadWindowsSetting() {
-        try {
-            fLogger.info("parsing windows control settings..");
-            NodeList settingsList = doc.getElementsByTagName("setting");
+            API_KEY = key;
+            NodeList settingsList = doc.getElementsByTagName("Setting");
 
             for (int index = 0; index < settingsList.getLength(); index++) {
                 Node tempNode = settingsList.item(index);
 
                 if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element eElement = (Element) tempNode;
-                    winCommands.put(eElement.getElementsByTagName("trigger").item(0).getTextContent(), eElement.getElementsByTagName("value").item(0).getTextContent());
+                    if (eElement.hasAttribute("type") && eElement.getAttribute("type").equals("api_key")) {
+                        eElement.getElementsByTagName("key").item(0).setTextContent(key);
+                        WriteToFile();
+                    }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            fLogger.info(e.getMessage());
         }
     }
 
-    public void ReadApplications() {
+    /**
+     * GetAPIKey()
+     * Returns API_KEY
+     * @return
+     */
+    public String GetAPIKey() {
+        return API_KEY;
+    }
+
+    /**
+     * ReadAPIKey()
+     * Gets the API Key from the settings file
+     */
+    public static void ReadAPIKey() {
         try {
-            fLogger.info("parsing applications settings..");
-            NodeList appNodeList = doc.getElementsByTagName("application");
+            fLogger.info("fetching API Key...");
+            NodeList settingsList = doc.getElementsByTagName("Setting");
+
+            for (int index = 0; index < settingsList.getLength(); index++) {
+                Node tempNode = settingsList.item(index);
+
+                if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) tempNode;
+                    if (eElement.hasAttribute("type") && eElement.getAttribute("type").equals("api_key")) {
+                        API_KEY = eElement.getElementsByTagName("key").item(0).getTextContent();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            fLogger.info(e.getMessage());
+        }
+    }
+
+    /**
+     * Creats the default settings file
+     */
+    public static void CreateDefaultSettings() {
+        try {
+            Element root = doc.createElement("Settings");
+            doc.appendChild(root);
+
+            root.appendChild(CreateWindowsSetting("enable windows controls", "true"));
+            root.appendChild(CreateWindowsSetting("launch on startup", "false"));
+            root.appendChild(CreateWindowsSetting("open the start menu", "true"));
+            root.appendChild(CreateWindowsSetting("go to sleep", "false"));
+            root.appendChild(CreateUserApp("launch Chrome", "C:\\Program Files (x86)\\Google\\Chrome\\Application\\Chrome.exe"));
+
+            Element type = doc.createElement("Type");
+            type.setAttribute("API_KEY", "Insert API Key Here");
+            ReadApplications();
+            ReadWindowsSettings();
+            WriteToFile();
+        } catch (Exception e) {
+            fLogger.info(e.getMessage());
+        }
+    }
+
+    /**
+     * CreateWindowsSetting
+     * @param key
+     * @param val
+     * @return
+     */
+    private static Node CreateWindowsSetting(String key, String val) {
+        Element newNode = doc.createElement("Setting");
+        doc.appendChild(newNode);
+        //set type of node to windows
+        newNode.setAttribute("Type", "windows");
+        // Create trigger element
+        newNode.appendChild(CreateNodeElement("trigger", key));
+        // create enabled element
+        newNode.appendChild(CreateNodeElement("enabled", val));
+
+        WriteToFile();
+
+        return newNode;
+    }
+
+    /**
+     * ReadWindowsSettings()
+     */
+    public static void ReadWindowsSettings() {
+        try {
+            NodeList settingsList = doc.getElementsByTagName("Setting");
+
+            for (int index = 0; index < settingsList.getLength(); index++) {
+                Node tempNode = settingsList.item(index);
+
+                if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) tempNode;
+                    if (eElement.hasAttribute("type") && eElement.getAttribute("type").equals("windows")) {
+                        winCommands.put(eElement.getElementsByTagName("trigger").item(0).getTextContent(), eElement.getElementsByTagName("enabled").item(0).getTextContent());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            fLogger.info(e.getMessage());
+        }
+    }
+
+    /**
+     * ChangeWindowsValue
+     * @param key
+     * @param Val
+     * Changes the enabled value in the settings file aswell as the windowsCommands Map
+     */
+    public static void ChangeWindowsValue(String key, String Val) {
+        try {
+            NodeList settingsList = doc.getElementsByTagName("Setting");
+            for (int index = 0; index < settingsList.getLength(); index++) {
+                Node tempNode = settingsList.item(index);
+
+                if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) tempNode;
+                    if (eElement.hasAttribute("type") && eElement.getAttribute("type").equals("windows")) {
+                        if (eElement.getElementsByTagName("trigger").item(0).getTextContent().equals(key)) {
+                            eElement.getElementsByTagName("enabled").item(0).setTextContent(Val);
+                            WriteToFile();
+
+                            for (Map.Entry entry : winCommands.entrySet()) {
+                                if (entry.getKey().equals(key)) {
+                                    entry.setValue(Val);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            fLogger.info(e.getMessage());
+        }
+    }
+
+    /**
+     * ReadApplications
+     * Loads the application list from the settings file into the appList Map
+     */
+    public static void ReadApplications() {
+        try {
+            NodeList appNodeList = doc.getElementsByTagName("Setting");
 
             for (int index = 0; index < appNodeList.getLength(); index++) {
                 Node nNode = appNodeList.item(index);
 
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element eElement = (Element) nNode;
-                    appList.put(eElement.getElementsByTagName("trigger").item(0).getTextContent(), eElement.getElementsByTagName("directory").item(0).getTextContent());
+                    if (eElement.hasAttribute("type") && eElement.getAttribute("type").equals("application")) {
+                        appList.put(eElement.getElementsByTagName("trigger").item(0).getTextContent(), eElement.getElementsByTagName("directory").item(0).getTextContent());
+                    }
+                }
+            }
+        } catch (NullPointerException e) {
+            fLogger.info(e.getMessage());
+        }
+    }
+
+    /**
+     * CreateUserApp
+     * @param key
+     * @param val
+     * @return
+     */
+    public static Node CreateUserApp(String key, String val) {
+        Element newNode = doc.createElement("Setting");
+
+        NodeList settingsList = doc.getElementsByTagName("Setting");
+        for (int index = 0; index < settingsList.getLength(); index++) {
+            Node tempNode = settingsList.item(index);
+
+            if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element eElement = (Element) tempNode;
+                if (eElement.hasAttribute("type") && eElement.getAttribute("type").equals("application")) {
+                    eElement.getParentNode().insertBefore(newNode, eElement.getNextSibling());
+
+                    if (!appList.containsKey(key)) {
+                        appList.put(key, val);
+                    }
+                }
+            }
+        }
+
+        //set type of node to application
+        newNode.setAttribute("type", "application");
+        // Create trigger element
+        newNode.appendChild(CreateNodeElement("trigger", key));
+        // Create directory element
+        newNode.appendChild(CreateNodeElement("directory", val));
+        WriteToFile();
+
+
+        return newNode;
+    }
+
+    /**
+     * DeleteUserApp
+     * @param key
+     * Deletes the specified app from the settings file aswell as the appList
+     */
+    public static void DeleteUserApp(String key) {
+        try {
+            NodeList appNodeList = doc.getElementsByTagName("Setting");
+
+            for (int index = 0; index < appNodeList.getLength(); index++) {
+                Node nNode = appNodeList.item(index);
+
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) nNode;
+                    if (eElement.hasAttribute("type") && eElement.getAttribute("type").equals("application")) {
+                        if (eElement.getElementsByTagName("trigger").item(0).getTextContent().equals(key)) {
+                            nNode.getParentNode().removeChild(eElement);
+                            fLogger.info("Deleting user app " + key);
+                            WriteToFile();
+                        }
+                    }
+                }
+            }
+            if (appList.containsKey(key)) {
+                appList.remove(key);
+            }
+            ReadApplications();
+        } catch (Exception e) {
+            fLogger.info(e.getMessage());
+        }
+    }
+
+    /**
+     * ChangeUserAppValue
+     * @param key
+     * @param Val
+     * Changes the specified application value
+     */
+    public static void ChangeUserAppValue(String key, String Val) {
+        try {
+            for (Map.Entry entry : appList.entrySet()) {
+                if (entry.getKey().equals(key)) {
+                    entry.setValue(Val);
+                }
+            }
+            NodeList appNodeList = doc.getElementsByTagName("Setting");
+
+            for (int index = 0; index < appNodeList.getLength(); index++) {
+                Node nNode = appNodeList.item(index);
+
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) nNode;
+                    if (eElement.hasAttribute("type") && eElement.getAttribute("type").equals("application")) {
+                        if (eElement.getElementsByTagName("trigger").item(0).getTextContent().equals(key)) {
+                            eElement.getElementsByTagName("directory").item(0).setTextContent(Val);
+                            WriteToFile();
+                        }
+                    }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            fLogger.info(e.getMessage());
+        }
+    }
+
+    /**
+     * CreateNode
+     * @param tagName
+     * @param val
+     * @return
+     * Simplifies the Node Creation process
+     */
+    public static Node CreateNode(String tagName, String val) {
+        Element node = doc.createElement(tagName);
+        node.appendChild(doc.createTextNode(val));
+
+        return node;
+    }
+
+    /**
+     * CreateNodeElement
+     * @param tagName
+     * @param val
+     * @return
+     * Simplifies the Node Element creation process and reduces redundancy
+     */
+    private static Node CreateNodeElement(String tagName, String val) {
+        Element node = doc.createElement(tagName);
+        node.appendChild(doc.createTextNode(val));
+
+        return node;
+    }
+
+    /**
+     * WriteToFile
+     * Writes to the settings file
+     */
+    public static void WriteToFile() {
+        try {
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(new File(settingsFilePath));
+            StreamResult console = new StreamResult(System.out);
+            transformer.transform(source, result);
+            fLogger.info("Writing to file...");
+        } catch (TransformerException e) {
+            fLogger.info(e.getMessage());
         }
     }
 }

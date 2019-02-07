@@ -1,4 +1,4 @@
-package main.net.iharder.jpushbullet2;
+package main.jpushbullet2;
 
 
 import java.util.EventListener;
@@ -23,7 +23,7 @@ public interface PushbulletListener extends EventListener {
      * associated with the Pushbullet account.
      * @param pushEvent The event related to the change 
      */
-    public abstract void devicesChanged( PushbulletEvent pushEvent );
+    public abstract void devicesChanged(PushbulletEvent pushEvent);
     
     //public abstract void websocketClosed(PushbulletEvent pushEvent);
 

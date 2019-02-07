@@ -1,28 +1,26 @@
 package main;
 
-import main.net.iharder.jpushbullet2.*;
+import main.jpushbullet2.*;
 import main.util.FileHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.List;
 
 /**
  * PushReceiver
  * This class is used to listen and extract the body of text from a pushbullet notification
- *
- * TODO:
- * Make AccessToken variable load from a config file
  */
 public class PushReceiver implements PushbulletListener {
     private static String AccessToken = "";
     private static final Logger prLogger = LoggerFactory.getLogger(PushReceiver.class);
-    private static CommandController cController = null;
+    private static CommandProcessor cProcessor = null;
+    private static PushbulletClient client = null;
+    private static PushbulletListener listener = null;
 
-    public PushReceiver(CommandController cControl, FileHandler fHandler) {
+    public PushReceiver(CommandProcessor cProcess, FileHandler fHandler) {
         try {
-            cController = cControl;
+            cProcessor = cProcess;
             AccessToken = fHandler.GetAPIKey();
             StartListening();
         } catch (InterruptedException e) {
@@ -33,14 +31,19 @@ public class PushReceiver implements PushbulletListener {
         }
     }
 
+    public void StopListening() {
+        client.removePushBulletListener(listener);
+        client.stopWebsocket();
+    }
+
     /**
      * Our pushBullet event listener
      * @throws PushbulletException
      * @throws InterruptedException
      */
     public void StartListening() throws PushbulletException, InterruptedException {
-        PushbulletClient client = new PushbulletClient( AccessToken );
-        client.addPushbulletListener(new PushbulletListener(){
+        client = new PushbulletClient( AccessToken );
+        client.addPushbulletListener(listener = new PushbulletListener(){
 
             /**
              * pushReceived
@@ -49,14 +52,12 @@ public class PushReceiver implements PushbulletListener {
              */
             @Override
             public void pushReceived(PushbulletEvent pushEvent) {
-                //System.out.println("pushReceived PushEvent received: " + pushEvent);
                 prLogger.info("pushReceived PushEvent received: " + pushEvent.toString());
                 System.out.println(pushEvent.toString());
                 try {
                     List<Push> pushes = client.getPushes(0);
-                    //System.out.println("Number of pushes: " + pushes.size());
                     Push p = pushes.get(0);
-                    cController.ProcessPush(p.getBody());
+                    cProcessor.ProcessPush(p.getBody());
                     pushes.clear();
                 } catch (PushbulletException e) {
                     System.out.println(e.getMessage());

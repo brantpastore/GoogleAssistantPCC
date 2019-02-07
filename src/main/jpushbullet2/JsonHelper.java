@@ -1,8 +1,9 @@
-package main.net.iharder.jpushbullet2;
+package main.jpushbullet2;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
+
 import java.lang.reflect.Type;
 
 /**

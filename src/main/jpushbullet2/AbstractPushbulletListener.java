@@ -1,4 +1,4 @@
-package main.net.iharder.jpushbullet2;
+package main.jpushbullet2;
 
 
 /**
