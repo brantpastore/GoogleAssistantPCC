@@ -42,40 +42,48 @@ public class PushReceiver implements PushbulletListener {
      * @throws InterruptedException
      */
     public void StartListening() throws PushbulletException, InterruptedException {
-        client = new PushbulletClient( AccessToken );
-        client.addPushbulletListener(listener = new PushbulletListener(){
+        try {
+            client = new PushbulletClient(AccessToken);
+            // TODO:
+            // Create an alert window if the session doesnt connect to notify the user
+            //    AlertWindow a = new AlertWindow("Error", "Issues communicating with Pushbullet (is the API Key correct?)");
 
-            /**
-             * pushReceived
-             * @param pushEvent
-             * We pass the notification to the command controller
-             */
-            @Override
-            public void pushReceived(PushbulletEvent pushEvent) {
-                prLogger.info("pushReceived PushEvent received: " + pushEvent.toString());
-                System.out.println(pushEvent.toString());
-                try {
-                    List<Push> pushes = client.getPushes(0);
-                    Push p = pushes.get(0);
-                    cProcessor.ProcessPush(p.getBody());
-                    pushes.clear();
-                } catch (PushbulletException e) {
-                    System.out.println(e.getMessage());
+            client.addPushbulletListener(listener = new PushbulletListener() {
+
+                /**
+                 * pushReceived
+                 *
+                 * @param pushEvent We pass the notification to the command processor class
+                 */
+                @Override
+                public void pushReceived(PushbulletEvent pushEvent) {
+                    prLogger.info("pushReceived PushEvent received: " + pushEvent.toString());
+                    System.out.println(pushEvent.toString());
+                    try {
+                        List<Push> pushes = client.getPushes(0);
+                        Push p = pushes.get(0);
+                        cProcessor.ProcessPush(p.getBody());
+                        pushes.clear();
+                    } catch (PushbulletException e) {
+                        System.out.println(e.getMessage());
+                    }
                 }
-            }
 
-            @Override
-            public void devicesChanged(PushbulletEvent pushEvent) {
-            }
+                @Override
+                public void devicesChanged(PushbulletEvent pushEvent) {
+                }
 
-            @Override
-            public void websocketEstablished(PushbulletEvent pushEvent) {
+                @Override
+                public void websocketEstablished(PushbulletEvent pushEvent) {
 
-            }
-        });
+                }
+            });
 
-        prLogger.info("Starting websocket...");
-        client.startWebsocket();
+            prLogger.info("Starting websocket...");
+            client.startWebsocket();
+        } catch (Exception ex) {
+            prLogger.error("Error connecting to Pushbullet websocket: " + ex.getMessage());
+        }
     }
 
     public void pushReceived(PushbulletEvent pushEvent) {

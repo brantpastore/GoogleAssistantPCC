@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="80.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Pane layoutY="-6.0" prefHeight="88.0" prefWidth="600.0">
+         <children>
+            <Label fx:id="messageTypeLabel" layoutX="33.0" layoutY="22.0" prefHeight="17.0" prefWidth="91.0" text="MessageType" />
+            <Label fx:id="alertMessage" layoutX="51.0" layoutY="48.0" text="Label" />
+         </children>
+      </Pane>
+   </children>
+</AnchorPane>

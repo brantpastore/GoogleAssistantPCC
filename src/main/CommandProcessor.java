@@ -1,6 +1,7 @@
 package main;
 
 import main.util.FileHandler;
+import main.view.controller.main.UIController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,9 +28,11 @@ public class CommandProcessor {
     static File fileLog = new File("src/deps/GoogleAssistantPCC.log");
 
     private static FileHandler fHandler = null;
+    private static UIController ui = null;
 
-    public CommandProcessor(FileHandler ifHandler) {
+    public CommandProcessor(FileHandler ifHandler, UIController uiC) {
         fHandler = ifHandler;
+        ui = uiC;
     }
 
     public static void InitNircmd() throws Exception {
@@ -39,12 +42,14 @@ public class CommandProcessor {
      * ProcessPush
      *
      * @param command Proccesses the command sent to use by PushReceiver.
+     * TODO:
+     *     Popup notifying the user windows commands arent enabled if a windows command trigger is used
      */
     public static void ProcessPush(String command) {
         cpLogger.info(command);
         for (int index = 0; index < fHandler.GetAppList().size(); index++) {
             if (fHandler.GetAppList().containsKey(command)) {
-               cpLogger.info("Found trigger: " + command);
+                cpLogger.info("Found trigger: " + command);
                 try {
                     nirProc = new ProcessBuilder("src/deps/nircmd.exe", "exec", "show", fHandler.GetAppList().get(command).toString()).start();
                 } catch (IOException e) {
@@ -55,15 +60,17 @@ public class CommandProcessor {
 
         for (int index = 0; index < fHandler.GetWinCommands().size(); index++) {
             if (fHandler.GetWinCommands().containsKey(command)) {
-                if (command.equals("open the start menu")) {
-                    GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-                    try {
-                        Robot robo = new Robot(gd);
-                        robo.setAutoDelay(100);
-                        robo.keyPress(KeyEvent.VK_WINDOWS);
-                        robo.keyRelease(KeyEvent.VK_WINDOWS);
-                    } catch (AWTException e) {
-                        cpLogger.info(e.getMessage());
+                if (ui.WindowsCommandsEnabled()) {
+                    if (command.equals("open the start menu")) {
+                        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+                        try {
+                            Robot robo = new Robot(gd);
+                            robo.setAutoDelay(100);
+                            robo.keyPress(KeyEvent.VK_WINDOWS);
+                            robo.keyRelease(KeyEvent.VK_WINDOWS);
+                        } catch (AWTException e) {
+                            cpLogger.info(e.getMessage());
+                        }
                     }
                 }
             }

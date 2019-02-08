@@ -13,20 +13,19 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="396.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.view.controller.UIController">
+<AnchorPane prefHeight="396.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.view.controller.main.UIController">
    <children>
       <MenuBar layoutY="2.0" prefHeight="25.0" prefWidth="600.0">
         <menus>
           <Menu mnemonicParsing="false" text="Settings">
             <items>
-              <MenuItem fx:id="LoadSettingsFile" mnemonicParsing="false" text="Load settings file.." />
-                  <MenuItem fx:id="SaveSettings" mnemonicParsing="false" text="Save settings " />
-                  <MenuItem fx:id="QuitProgram" mnemonicParsing="false" text="Quit" />
+              <MenuItem fx:id="LoadSettingsFileItem" mnemonicParsing="false" onAction="#LoadSettingFile" text="Load settings file.." />
+                  <MenuItem fx:id="QuitMenuItem" mnemonicParsing="false" onAction="#Quit" text="Quit" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="Help">
             <items>
-              <MenuItem fx:id="AboutMenu" mnemonicParsing="false" text="About" />
+              <MenuItem fx:id="AboutMenu" mnemonicParsing="false" onAction="#About" text="About" />
             </items>
           </Menu>
         </menus>
@@ -66,7 +65,7 @@
       <TextField fx:id="pushbulletKeyTextBox" layoutX="122.0" layoutY="38.0" prefHeight="25.0" prefWidth="323.0" text="" />
       <Label layoutX="14.0" layoutY="42.0" text="Pushbullet API Key:" />
       <CheckBox fx:id="startupEnabled" layoutX="14.0" layoutY="344.0" mnemonicParsing="false" onAction="#LaunchOnStartup" text="Launch on startup" />
-      <CheckBox fx:id="winControlsEnabled" layoutX="14.0" layoutY="369.0" mnemonicParsing="false" onAction="#EnableWindowsControlls" text="Enable Windows controls" />
+      <CheckBox fx:id="winControlsEnabled" layoutX="14.0" layoutY="369.0" mnemonicParsing="false" onAction="#EnableWindowsControls" text="Enable Windows controls" />
       <Button fx:id="StartButton" layoutX="477.0" layoutY="352.0" mnemonicParsing="false" onAction="#StartApp" prefHeight="25.0" prefWidth="73.0" text="Start" />
       <Button fx:id="addUserAppButton" layoutX="358.0" layoutY="352.0" mnemonicParsing="false" onAction="#AddUserApp" text="Add application" />
    </children>

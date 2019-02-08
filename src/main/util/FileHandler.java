@@ -1,5 +1,6 @@
 package main.util;
 
+import main.view.controller.AlertWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -20,6 +21,8 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,6 +78,32 @@ public class FileHandler {
 
         ReadWindowsSettings();
         ReadApplications();
+    }
+
+    public void LoadSettingsFile(File newFile) {
+        try {
+            settingsFactory = DocumentBuilderFactory.newInstance();
+            dBuilder = settingsFactory.newDocumentBuilder();
+
+            inputFile = new File(settingsFilePath);
+
+            Files.copy(newFile.toPath(), inputFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+            if (inputFile.exists() == false) {
+                doc = dBuilder.newDocument();
+                CreateDefaultSettings();
+            } else {
+                doc = dBuilder.parse(inputFile);
+                ReadAPIKey();
+                ReadWindowsSettings();
+                ReadApplications();
+            }
+            WriteToFile();
+            doc.getDocumentElement().normalize();
+        } catch (ParserConfigurationException | IOException | SAXException e) {
+            fLogger.info(e.getMessage());
+        } catch (NullPointerException e) {
+            //AlertWindow a = new AlertWindow("Error", "File not selected");
+        }
     }
 
     /**
@@ -206,6 +235,7 @@ public class FileHandler {
      */
     public static void ReadWindowsSettings() {
         try {
+            winCommands.clear();
             NodeList settingsList = doc.getElementsByTagName("Setting");
 
             for (int index = 0; index < settingsList.getLength(); index++) {
@@ -262,6 +292,7 @@ public class FileHandler {
      */
     public static void ReadApplications() {
         try {
+            appList.clear();
             NodeList appNodeList = doc.getElementsByTagName("Setting");
 
             for (int index = 0; index < appNodeList.getLength(); index++) {
