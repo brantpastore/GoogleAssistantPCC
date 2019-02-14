@@ -1,6 +1,5 @@
 package main.util;
 
-import main.view.controller.notification.NotificationWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -24,6 +23,8 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
+
+import main.view.notification.NotificationWindow;
 
 /**
  * FileHandler
@@ -100,6 +101,7 @@ public class FileHandler {
             ReadApplications();
             WriteToFile();
             doc.getDocumentElement().normalize();
+            NotificationWindow a = new NotificationWindow("File handler", "Settings file successfully loaded", "Loaded from " + inputFile.toPath().toString());
         } catch (ParserConfigurationException | IOException | SAXException e) {
             fLogger.info(e.getMessage());
         } catch (NullPointerException e) {
@@ -117,6 +119,7 @@ public class FileHandler {
             Files.copy(defaultFile.toPath(), inputFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
             inputFile = new File(settingsFilePath);
             this.LoadSettingsFile(inputFile);
+            NotificationWindow n = new NotificationWindow("File handler","Success","User applications and windows control settings have been reset!");
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -134,9 +137,9 @@ public class FileHandler {
             if(newSettingsFile.createNewFile()) {
                 Files.copy(inputFile.toPath(), newSettingsFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
                 if (newSettingsFile.exists()) {
-                    NotificationWindow n = new NotificationWindow("Success", "Settings file Successfully created!", "");
+                    NotificationWindow n = new NotificationWindow("File handler", "Success", "Settings file Successfully created!");
                 } else {
-                    NotificationWindow n = new NotificationWindow("Error", "There was an error creating the file...", "");
+                    NotificationWindow n = new NotificationWindow("File handler", "Error", "There was an error creating the file...");
                 }
             }
         } catch (IOException e) {

@@ -1,7 +1,7 @@
 package main;
 
 import main.util.FileHandler;
-import main.view.controller.main.UIController;
+import main.view.main.UIController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

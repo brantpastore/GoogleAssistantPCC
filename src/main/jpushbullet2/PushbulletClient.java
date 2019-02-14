@@ -1,6 +1,6 @@
 package main.jpushbullet2;
 
-import main.view.controller.notification.NotificationWindow;
+import main.view.notification.NotificationWindow;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
