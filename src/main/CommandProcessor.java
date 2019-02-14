@@ -35,13 +35,10 @@ public class CommandProcessor {
         ui = uiC;
     }
 
-    public static void InitNircmd() throws Exception {
-    }
-
     /**
      * ProcessPush
-     *
-     * @param command Proccesses the command sent to use by PushReceiver.
+     * @param command
+     * Proccesses the command sent to use by PushReceiver.
      * TODO:
      *     Popup notifying the user windows commands arent enabled if a windows command trigger is used
      */

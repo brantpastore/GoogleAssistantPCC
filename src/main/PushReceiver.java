@@ -2,9 +2,13 @@ package main;
 
 import main.jpushbullet2.*;
 import main.util.FileHandler;
+import main.view.controller.notification.NotificationWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.websocket.DeploymentException;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 /**
@@ -42,7 +46,7 @@ public class PushReceiver implements PushbulletListener {
      * @throws InterruptedException
      */
     public void StartListening() throws PushbulletException, InterruptedException {
-        try {
+        //try {
             client = new PushbulletClient(AccessToken);
             // TODO:
             // Create an alert window if the session doesnt connect to notify the user
@@ -66,6 +70,7 @@ public class PushReceiver implements PushbulletListener {
                         pushes.clear();
                     } catch (PushbulletException e) {
                         System.out.println(e.getMessage());
+                        NotificationWindow n = new NotificationWindow("Error", "Error", e.getMessage());
                     }
                 }
 
@@ -81,9 +86,10 @@ public class PushReceiver implements PushbulletListener {
 
             prLogger.info("Starting websocket...");
             client.startWebsocket();
-        } catch (Exception ex) {
-            prLogger.error("Error connecting to Pushbullet websocket: " + ex.getMessage());
-        }
+//        } catch (Exception e) {
+//            NotificationWindow n = new NotificationWindow("Error", "Error", e.getMessage());
+//            prLogger.error("Error connecting to Pushbullet websocket: " + e.getMessage());
+//        }
     }
 
     public void pushReceived(PushbulletEvent pushEvent) {

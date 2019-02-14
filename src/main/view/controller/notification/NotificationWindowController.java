@@ -7,6 +7,9 @@ import javafx.scene.control.Label;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+/**
+ * NotificationWindowController
+ */
 public class NotificationWindowController implements Initializable {
     private String type;
     private String message;
@@ -17,11 +20,21 @@ public class NotificationWindowController implements Initializable {
     @FXML
     private Label alertMessage;
 
+    /**
+     * NotificationWindowController
+     * @param type
+     * @param message
+     */
     public NotificationWindowController(String type, String message) {
         this.type = type;
         this.message = message;
     }
 
+    /**
+     * initialize
+     * @param url
+     * @param rb
+     */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         messageTypeLabel.setText(type);

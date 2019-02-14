@@ -8,8 +8,8 @@
    <children>
       <Pane layoutY="-6.0" prefHeight="88.0" prefWidth="600.0">
          <children>
-            <Label fx:id="messageTypeLabel" layoutX="33.0" layoutY="22.0" prefHeight="17.0" prefWidth="91.0" text="MessageType" />
-            <Label fx:id="alertMessage" layoutX="51.0" layoutY="48.0" text="Label" />
+            <Label fx:id="messageTypeLabel" layoutX="33.0" layoutY="22.0" prefHeight="17.0" prefWidth="552.0" text="MessageType" />
+            <Label fx:id="alertMessage" layoutX="51.0" layoutY="48.0" prefHeight="17.0" prefWidth="538.0" text="Label" />
          </children>
       </Pane>
    </children>

@@ -1,5 +1,6 @@
 package main.jpushbullet2;
 
+import main.view.controller.notification.NotificationWindow;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
@@ -240,12 +241,15 @@ public class PushbulletClient {
         } // end try
         catch (DeploymentException ex) {
             LOGGER.error("Error connecting to Pushbullet websocket: " + ex.getMessage());
+            NotificationWindow n = new NotificationWindow("Pushbullet Error", "Error connecting to Pushbullet websocket: ", ex.getMessage());
             websocketSession = null;
         } catch (IOException ex) {
             LOGGER.error("Error connecting to Pushbullet websocket: " + ex.getMessage());
+            NotificationWindow n = new NotificationWindow("Pushbullet Error", "Error connecting to Pushbullet websocket: ", ex.getMessage());
             websocketSession = null;
         } catch (URISyntaxException ex) {
             LOGGER.error("Error connecting to Pushbullet websocket: " + ex.getMessage());
+            NotificationWindow n = new NotificationWindow("Pushbullet Error", "Error connecting to Pushbullet websocket: ", ex.getMessage());
             websocketSession = null;
         } finally {
         }
@@ -1470,6 +1474,7 @@ public class PushbulletClient {
                             LOGGER.info("Timer discovered that websocket was closed. Attempting to reopen...");
                             initWebsocket();
                             if( LOGGER.isInfoEnabled() ){
+                                NotificationWindow a = new NotificationWindow("Alert", "Websocket opened: ", (websocketSession == null ? "null" : Boolean.valueOf(websocketSession.isOpen()).toString()));
                                 LOGGER.info("Websocket opened: " + ( websocketSession == null ? "null" : websocketSession.isOpen() ) );
                             }
                         }

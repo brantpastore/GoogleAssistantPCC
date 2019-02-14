@@ -1,14 +1,15 @@
 package main.view.controller;
 
 import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.control.TableView;
 
 /**
  * Table class
  * Used to hold the column Strings for both User Applications and Windows Commands
  */
-public class Table {
-    SimpleStringProperty ColumnOne;
-    SimpleStringProperty ColumnTwo;
+public class Table extends TableView {
+    private SimpleStringProperty ColumnOne;
+    private SimpleStringProperty ColumnTwo;
 
     public Table(String colOne, String colTwo) {
         this.ColumnOne = new SimpleStringProperty(colOne);
@@ -19,9 +20,7 @@ public class Table {
         return ColumnOne.get();
     }
 
-    public void setColumnOne(String s) {
-        ColumnOne.set(s);
-    }
+    public void setColumnOne(String s) { ColumnOne.set(s); }
 
     public String getColumnTwo() {
         return ColumnTwo.get();

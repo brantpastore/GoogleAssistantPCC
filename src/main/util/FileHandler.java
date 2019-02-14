@@ -1,6 +1,6 @@
 package main.util;
 
-import main.view.controller.AlertWindow;
+import main.view.controller.notification.NotificationWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -13,7 +13,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -33,11 +32,11 @@ import java.util.Map;
  */
 public class FileHandler {
     private static Logger fLogger = LoggerFactory.getLogger(FileHandler.class);
-    private FileInputStream io = null;
-    private File inputFile = null;
+    private static FileInputStream io = null;
+    private static File inputFile = null;
 
-    private DocumentBuilderFactory settingsFactory;
-    private DocumentBuilder dBuilder;
+    private static DocumentBuilderFactory settingsFactory;
+    private static DocumentBuilder dBuilder;
     private static Document doc;
 
     private static String API_KEY = "";
@@ -80,7 +79,12 @@ public class FileHandler {
         ReadApplications();
     }
 
-    public void LoadSettingsFile(File newFile) {
+    /**
+     * LoadSettingsFile
+     * @param newFile
+     * Replaces the src/deps/settings.cfg with the user specified newFile
+     */
+    public static void LoadSettingsFile(File newFile) {
         try {
             settingsFactory = DocumentBuilderFactory.newInstance();
             dBuilder = settingsFactory.newDocumentBuilder();
@@ -88,21 +92,55 @@ public class FileHandler {
             inputFile = new File(settingsFilePath);
 
             Files.copy(newFile.toPath(), inputFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
-            if (inputFile.exists() == false) {
-                doc = dBuilder.newDocument();
-                CreateDefaultSettings();
-            } else {
-                doc = dBuilder.parse(inputFile);
-                ReadAPIKey();
-                ReadWindowsSettings();
-                ReadApplications();
-            }
+            doc = dBuilder.newDocument();
+            CreateDefaultSettings();
+            doc = dBuilder.parse(inputFile);
+            ReadAPIKey();
+            ReadWindowsSettings();
+            ReadApplications();
             WriteToFile();
             doc.getDocumentElement().normalize();
         } catch (ParserConfigurationException | IOException | SAXException e) {
             fLogger.info(e.getMessage());
         } catch (NullPointerException e) {
-            //AlertWindow a = new AlertWindow("Error", "File not selected");
+        }
+    }
+
+    /**
+     * ResetSettingsFile
+     * Replaces the current settings.cfg file with the default_settings.cfg
+     */
+    public void ResetSettingsFile() {
+        try {
+            File inputFile = new File(settingsFilePath);
+            File defaultFile = new File("src//deps//default_settings.cfg");
+            Files.copy(defaultFile.toPath(), inputFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+            inputFile = new File(settingsFilePath);
+            this.LoadSettingsFile(inputFile);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * ExportSettingsFile
+     * @param path
+     * Creates a copy of the current settings file and saves it to the specified path
+     */
+    public void ExportSettingsFile(String path) {
+        try {
+            inputFile = new File(settingsFilePath);
+            File newSettingsFile = new File(path);
+            if(newSettingsFile.createNewFile()) {
+                Files.copy(inputFile.toPath(), newSettingsFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+                if (newSettingsFile.exists()) {
+                    NotificationWindow n = new NotificationWindow("Success", "Settings file Successfully created!", "");
+                } else {
+                    NotificationWindow n = new NotificationWindow("Error", "There was an error creating the file...", "");
+                }
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -147,6 +185,7 @@ public class FileHandler {
                     }
                 }
             }
+            ReadAPIKey();
         } catch (Exception e) {
             fLogger.info(e.getMessage());
         }
@@ -157,7 +196,7 @@ public class FileHandler {
      * Returns API_KEY
      * @return
      */
-    public String GetAPIKey() {
+    public static String GetAPIKey() {
         return API_KEY;
     }
 
@@ -177,6 +216,7 @@ public class FileHandler {
                     Element eElement = (Element) tempNode;
                     if (eElement.hasAttribute("type") && eElement.getAttribute("type").equals("api_key")) {
                         API_KEY = eElement.getElementsByTagName("key").item(0).getTextContent();
+//                        SetAPIKey(GetAPIKey());
                     }
                 }
             }
@@ -380,6 +420,38 @@ public class FileHandler {
     }
 
     /**
+     * ChangeUserAppKey
+     * @param key
+     * Changes the specified application key (trigger/voice command)
+     */
+    public static void ChangeUserAppKey(String key, String newKey) {
+        try {
+            if (appList.containsKey(key)) {
+                appList.put(key, newKey);
+            }
+
+            NodeList appNodeList = doc.getElementsByTagName("Setting");
+
+            for (int index = 0; index < appNodeList.getLength(); index++) {
+                Node nNode = appNodeList.item(index);
+
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) nNode;
+                    if (eElement.hasAttribute("type") && eElement.getAttribute("type").equals("application")) {
+                        if (eElement.getElementsByTagName("trigger").item(0).getTextContent().equals(key)) {
+                            eElement.getElementsByTagName("trigger").item(0).setTextContent(newKey);
+                            WriteToFile();
+                            LoadSettingsFile(inputFile);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            fLogger.info(e.getMessage());
+        }
+    }
+
+    /**
      * ChangeUserAppValue
      * @param key
      * @param Val
@@ -403,6 +475,7 @@ public class FileHandler {
                         if (eElement.getElementsByTagName("trigger").item(0).getTextContent().equals(key)) {
                             eElement.getElementsByTagName("directory").item(0).setTextContent(Val);
                             WriteToFile();
+                            LoadSettingsFile(inputFile);
                         }
                     }
                 }

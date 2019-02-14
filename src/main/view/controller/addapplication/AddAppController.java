@@ -22,37 +22,63 @@ import java.util.ResourceBundle;
  * Add an icon to the Browse button
  */
 public class AddAppController implements Initializable {
-    private static FileHandler fhandler;
+    private static FileHandler fHandler;
     private static UIController ui;
 
+    /**
+     * addAppWindowButton
+     */
     @FXML
     private Button addAppWindowButton;
 
+    /**
+     * browseForAppButton
+     */
     @FXML
     private Button browseForAppButton;
 
+    /**
+     * triggerTextField
+     */
     @FXML
     private TextField triggerTextField;
 
+    /**
+     * directoryTextField
+     */
     @FXML
     private TextField directoryTextField;
 
+    /**
+     * pathToExeLabel
+     */
     @FXML
     private Label pathToExeLabel;
 
-
+    /**
+     * AddAppController
+     */
     public AddAppController() {
     }
 
+    /**
+     * AddAppContrroller
+     * @param fhandle
+     */
     public AddAppController(FileHandler fhandle) {
-        this.fhandler = fhandle;
+        this.fHandler = fhandle;
     }
 
+    /**
+     * SetUI
+     * @param uiC
+     */
     public void SetUI(UIController uiC) {
         this.ui = uiC;
     }
 
     /**
+     * initialize
      * @param url
      * @param rb
      */
@@ -63,18 +89,21 @@ public class AddAppController implements Initializable {
     /**
      * addApplication
      * @param event
-     * Taking the triggerTextField value and the directoryTextField value
-     * we add a new user app and refresh the app table
+     * Taking the triggerTextField value and the directoryTextField
+     * value we add a new user app and refresh the app table
      * Then close the window
      */
     @FXML
     void AddApplication(ActionEvent event) {
         try {
-            System.out.println("Adding app");
-            if (!triggerTextField.getText().isEmpty() && !directoryTextField.getText().isEmpty()) {
-                this.fhandler.CreateUserApp(triggerTextField.getText(), directoryTextField.getText());
-                this.ui.ReloadUserAppTable();
-                ((Node)(event.getSource())).getScene().getWindow().hide();
+            if (!ui.GetAppMap().containsKey(triggerTextField.getText())) {
+                if (!triggerTextField.getText().isEmpty() && !directoryTextField.getText().isEmpty()) {
+                    this.fHandler.CreateUserApp(triggerTextField.getText(), directoryTextField.getText());
+                    this.ui.ReloadUserAppTable();
+                    ((Node) (event.getSource())).getScene().getWindow().hide();
+                }
+            } else {
+                NotificationWindow n = new NotificationWindow("Notice", "Warning", "You can NOT have duplicate voice commands (triggers)");
             }
         } catch (NullPointerException e) {
             System.out.println(e.getMessage());

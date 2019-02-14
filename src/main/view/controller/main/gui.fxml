@@ -13,13 +13,15 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="396.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.view.controller.main.UIController">
+<AnchorPane fx:id="pane" prefHeight="396.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.view.controller.main.UIController">
    <children>
-      <MenuBar layoutY="2.0" prefHeight="25.0" prefWidth="600.0">
+      <MenuBar fx:id="menuBar" layoutX="483.0" layoutY="-2.0" prefHeight="25.0" prefWidth="117.0">
         <menus>
           <Menu mnemonicParsing="false" text="Settings">
             <items>
               <MenuItem fx:id="LoadSettingsFileItem" mnemonicParsing="false" onAction="#LoadSettingFile" text="Load settings file.." />
+                  <MenuItem fx:id="exportSettingsFileItem" mnemonicParsing="false" onAction="#ExportSettingsFile" text="Export settings file.." />
+                  <MenuItem fx:id="ResetSettingsFileItem" mnemonicParsing="false" onAction="#ResetSettingsFile" text="Reset settings file.." />
                   <MenuItem fx:id="QuitMenuItem" mnemonicParsing="false" onAction="#Quit" text="Quit" />
             </items>
           </Menu>
@@ -68,5 +70,7 @@
       <CheckBox fx:id="winControlsEnabled" layoutX="14.0" layoutY="369.0" mnemonicParsing="false" onAction="#EnableWindowsControls" text="Enable Windows controls" />
       <Button fx:id="StartButton" layoutX="477.0" layoutY="352.0" mnemonicParsing="false" onAction="#StartApp" prefHeight="25.0" prefWidth="73.0" text="Start" />
       <Button fx:id="addUserAppButton" layoutX="358.0" layoutY="352.0" mnemonicParsing="false" onAction="#AddUserApp" text="Add application" />
+      <Button fx:id="SetKeyButton" layoutX="451.0" layoutY="38.0" mnemonicParsing="false" onAction="#SetKeyButtonSelected" text="Set" />
+      <MenuBar layoutX="-2.0" layoutY="-2.0" prefHeight="25.0" prefWidth="495.0" />
    </children>
 </AnchorPane>

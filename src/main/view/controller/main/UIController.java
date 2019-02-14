@@ -11,25 +11,43 @@ import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import main.CommandProcessor;
 import main.PushReceiver;
 import main.util.FileHandler;
+import main.view.controller.EditingCell;
 import main.view.controller.addapplication.AddAppController;
 import main.view.controller.Table;
 import main.view.controller.notification.NotificationWindow;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
-
 import static javafx.collections.FXCollections.observableArrayList;
 
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name="")
+@XmlRootElement(name="AnchorPane")
+
+/**
+ * UIController
+ */
 public class UIController implements Initializable {
     private static FileHandler fileHandler;
     private static CommandProcessor cProcessor;
@@ -38,11 +56,28 @@ public class UIController implements Initializable {
     private static String api_key = "";
     private static Map<String, String> winComMap = new HashMap<>();
     private static Map<String, String> userAppMap = new HashMap<>();
-    private List<Table> userTableList = new ArrayList<>();
-    private List<Table> winTableList = new ArrayList<>();
 
     private boolean startupIsEnabled;
+
     private boolean winCommandsAreEnabled;
+
+    /**
+     * GetAppMap()
+     * Used in AddAppController class to
+     */
+    public Map GetAppMap() { return userAppMap; }
+
+    /**
+     *
+     */
+    @FXML
+    private AnchorPane pane;
+
+    /**
+     *  MenuBar
+     */
+    @FXML
+    private MenuBar menuBar;
 
     /**
      * LoadSettingsFile Menu item
@@ -51,22 +86,34 @@ public class UIController implements Initializable {
     private MenuItem LoadSettingsFileItem;
 
     /**
+     * ExportSettingsFile Menu item
+     */
+    @FXML
+    private MenuItem exportSettingsFileItem;
+
+    /**
+     * ResetSettingsFile Menu item
+     */
+    @FXML
+    private MenuItem ResetSettingsFileItem;
+
+    /**
      * Quit Menu item
      */
     @FXML
-    private MenuItem QuitMenuItem;
+    private MenuItem quitMenuItem;
 
     /**
      * About Menu item
      */
     @FXML
-    private MenuItem AboutMenu;
+    private MenuItem uboutMenuItem;
 
     /**
      * User applications tab
      */
     @FXML
-    private Tab UserTab;
+    private Tab userTab;
 
     /**
      * userTable
@@ -145,6 +192,12 @@ public class UIController implements Initializable {
     private CheckBox winControlsEnabled;
 
     /**
+     * SetKey Button
+     */
+    @FXML
+    private Button SetKeyButton;
+
+    /**
      * Start/Stop Button
      */
     @FXML
@@ -165,6 +218,14 @@ public class UIController implements Initializable {
     public UIController() {}
 
 
+    /**
+     * UIController
+     * @param fh
+     * @param api
+     * @param winCmdList
+     * @param applicationList
+     * we initialize filehandler, set the api string, and populate the winCmdMap and userAppMap
+     */
     public UIController(FileHandler fh, String api, Map winCmdList, Map applicationList) {
         this.fileHandler = fh;
         this.api_key = api;
@@ -193,7 +254,7 @@ public class UIController implements Initializable {
      * Reloads User application table
      * Reloads windows command table
      */
-    public void Reload() {
+    public void ReloadTables() {
         ReloadUserAppTable();
         ReloadWinCommandTable();
     }
@@ -202,32 +263,42 @@ public class UIController implements Initializable {
      * ReloadUserAppTable
      */
     public void ReloadUserAppTable() {
-        this.fileHandler.GetAppList().clear();
-        this.fileHandler.ReadApplications();
+        try {
+            this.userAppMap.clear();
+            this.userData.clear();
+            this.fileHandler.GetAppList().clear();
+            this.userTable.getItems().clear();
 
-        this.userData.clear();
-        this.userAppMap.putAll(this.fileHandler.GetAppList());
+            this.fileHandler.ReadApplications();
+            this.userAppMap.putAll(this.fileHandler.GetAppList());
 
-        this.userTable.getItems().clear();
-        this.PopulateTable(this.userData, this.retrieveTable(this.userAppMap));
-        this.userTable.getItems().addAll(this.userData);
-        this.userTable.refresh();
+            this.PopulateTable(this.userData, this.retrieveTable(this.userAppMap));
+            this.userTable.getItems().addAll(this.userData);
+            this.userTable.refresh();
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /**
      * ReloadWinCommandTable
      */
     public void ReloadWinCommandTable() {
-        this.fileHandler.GetWinCommands().clear();
-        this.fileHandler.ReadWindowsSettings();
+        try {
+            //this.winComMap.clear();
+            this.winData.clear();
+            this.fileHandler.GetWinCommands().clear();
+            this.windowsTable.getItems().clear();
 
-        this.winData.clear();
-        this.winComMap.putAll(this.fileHandler.GetWinCommands());
+            this.fileHandler.ReadWindowsSettings();
+            this.winComMap.putAll(this.fileHandler.GetWinCommands());
 
-        this.windowsTable.getItems().clear();
-        this.PopulateTable(this.winData, this.retrieveTable(this.winComMap));
-        this.windowsTable.getItems().addAll(this.winData);
-        this.windowsTable.refresh();
+            this.PopulateTable(this.winData, this.retrieveTable(this.winComMap));
+            this.windowsTable.getItems().addAll(this.winData);
+            this.windowsTable.refresh();
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /**
@@ -237,12 +308,54 @@ public class UIController implements Initializable {
      */
     @FXML
     private void LoadSettingFile(ActionEvent event) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select settings file");
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("*.cfg", "*.cfg"));
-        fileHandler.LoadSettingsFile(fileChooser.showOpenDialog(LoadSettingsFileItem.getParentPopup().getScene().getWindow()));
-        this.userAppMap.clear();
-        this.ReloadUserAppTable();
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select settings file");
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("*.cfg", "*.cfg"));
+            File selectedFile = fileChooser.showOpenDialog(LoadSettingsFileItem.getParentPopup().getScene().getWindow());
+            fileHandler.LoadSettingsFile(selectedFile);
+            this.ReloadUserAppTable();
+            NotificationWindow a = new NotificationWindow("Success", "Settings file successfully loaded", "Loaded from " + selectedFile.toPath().toString());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * ResetSettingsFile
+     * @param event
+     * Resets the setting file to default
+     */
+    @FXML
+    private void ResetSettingsFile(ActionEvent event) {
+        try {
+            fileHandler.ResetSettingsFile();
+            NotificationWindow n = new NotificationWindow("Success","User applications and windows control settings have been reset!","Closing...");
+            this.ReloadUserAppTable();
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * ExportSettingsFile
+     * @param event
+     * Copies settings.cfg to specified location
+     */
+    @FXML
+    void ExportSettingsFile(ActionEvent event) {
+        try {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            File selectedDirectory = directoryChooser.showDialog(this.pushbulletKeyTextBox.getParent().getScene().getWindow()); // This is not the child that should be used.
+
+            if (selectedDirectory == null) {
+            } else {
+                fileHandler.ExportSettingsFile(selectedDirectory.getAbsolutePath()+"\\settings.cfg");
+                NotificationWindow a = new NotificationWindow("Exported", "settings.cfg has been successfully exported!", "Located: " + selectedDirectory.getAbsolutePath()+"\\settings.cfg");
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /**
@@ -263,45 +376,109 @@ public class UIController implements Initializable {
      */
     @FXML
     private void About(ActionEvent event) {
-        NotificationWindow n = new NotificationWindow("About", "Creator", "Brant.pastore@gmail.com\ngithub.com//brantpastore");
+        NotificationWindow n = new NotificationWindow("About", "Author", "Brant.pastore@gmail.com\ngithub.com//brantpastore");
     }
 
     /**
-     * Tabs()
+     * Tabs
      * Setup the tab visibility based on checkbox
      */
     private void Tabs() {
-        tabs.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
-            @Override
-            public void changed(ObservableValue<? extends Tab> observableValue, Tab tab, Tab t1) {
-                if (tab.equals(windowsTab)) {
-                    addUserAppButton.setVisible(true);
-                } else {
-                    addUserAppButton.setVisible(false);
+        try {
+            tabs.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
+                @Override
+                public void changed(ObservableValue<? extends Tab> observableValue, Tab tab, Tab t1) {
+                    if (tab.equals(windowsTab)) {
+                        addUserAppButton.setVisible(true);
+                    } else {
+                        addUserAppButton.setVisible(false);
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /**
-     * Tables:
-     * We setup the user app table and populate it
-     * We setup the windows settings table and populate it
+     * Tables
+     * Setup the user app table and populate it
+     * Setup the windows settings table and populate it
      */
     public void Tables() {
         try {
+            this.userTable.setEditable(true);
+
             this.userTriggerCol.setCellValueFactory(new PropertyValueFactory<String, String>("ColumnOne"));
+            this.userTriggerCol.setEditable(true);
+
+            EventHandler CellEditEvent = new EventHandler<KeyEvent>(){
+                @Override
+                public void handle(KeyEvent key) {
+                    if (key.getCode().equals(KeyCode.ENTER)) {
+                        //fileHandler.ChangeUserAppKey(cellEditEvent.getOldValue(), cellEditEvent.getNewValue());
+                        //ReloadUserAppTable();
+                        System.out.println("Cell edit saved");
+                    }
+                }
+            };
+
+            this.userTriggerCol.setCellFactory(new Callback<TableColumn<?,?>, TableCell<?,?>>() {
+                @Override
+                public TableCell call(TableColumn<?,?> p) {
+                    return new EditingCell();
+                }
+            });
+
+            this.userTriggerCol.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<Table, String>>() {
+                @Override
+                public void handle(TableColumn.CellEditEvent<Table, String> cellEditEvent) {
+                    String oldKey = cellEditEvent.getOldValue();
+                    cellEditEvent.getTableView().getItems().get(cellEditEvent.getTablePosition().getRow()).setColumnOne(cellEditEvent.getNewValue());
+                    fileHandler.ChangeUserAppKey(oldKey, cellEditEvent.getNewValue());
+                    System.out.println(cellEditEvent.getNewValue());
+                }
+            });
+
             this.userAppDirCol.setCellValueFactory(new PropertyValueFactory<String, String>("ColumnTwo"));
+            this.userAppDirCol.setEditable(true);
+
+            this.userAppDirCol.setCellFactory(new Callback<TableColumn<?,?>, TableCell<?,?>>() {
+                @Override
+                public TableCell call(TableColumn<?,?> p) {
+                    return new EditingCell();
+                }
+            });
+
+            this.userAppDirCol.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<Table, String>>() {
+                @Override
+                public void handle(TableColumn.CellEditEvent<Table, String> cellEditEvent) {
+                    String oldPath = cellEditEvent.getOldValue();
+                    System.out.println(oldPath);
+                    File nFile = new File(cellEditEvent.getNewValue());
+                    if (nFile.exists()) {
+                        cellEditEvent.getTableView().getItems().get(cellEditEvent.getTablePosition().getRow()).setColumnTwo(cellEditEvent.getNewValue());
+                        fileHandler.ChangeUserAppValue(cellEditEvent.getTableView().getItems().get(cellEditEvent.getTablePosition().getRow()).getColumnOne(), cellEditEvent.getNewValue());
+                    } else {
+                        NotificationWindow a = new NotificationWindow("Alert", "Error", "The specified executable does not exist. Reverting to previously selected exectuable.");
+                        cellEditEvent.getTableView().getItems().get(cellEditEvent.getTablePosition().getRow()).setColumnTwo(oldPath);
+                        fileHandler.ChangeUserAppValue(cellEditEvent.getTableView().getItems().get(cellEditEvent.getTablePosition().getRow()).getColumnOne(), oldPath);
+                    }
+                }
+            });
+
+
             this.PopulateTable(userData, this.retrieveTable(userAppMap));
             this.userTable.getItems().addAll(userData);
-            this.userTable.setEditable(true);
+
             this.userTable.refresh();
+
+
 
             this.winCommandCol.setCellValueFactory(new PropertyValueFactory<String, String>("ColumnOne"));
             this.winEnabledCol.setCellValueFactory(new PropertyValueFactory<String, String>("ColumnTwo"));
             this.PopulateTable(winData, this.retrieveTable(winComMap));
             this.windowsTable.getItems().addAll(winData);
-            this.winEnabledCol.setEditable(true);
             this.windowsTable.refresh();
 
             for (Map.Entry entry : winComMap.entrySet()) {
@@ -314,20 +491,17 @@ public class UIController implements Initializable {
                 }
             }
 
-            // TODO: Make tables editable
-//            winEnabledCol.setCellFactory(TextFieldTableCell.<Table>forTableColumn());
-//            winEnabledCol.setOnEditCommit(
-//                    (CellEditEvent<Table, String> t) -> {
-//                        ((Table) t.getTableView().getItems().get(
-//                                t.getTablePosition().getRow())
-//                        ).setColumnTwo(t.getNewValue());
-//                    });
-
+            HandleTables();
         } catch (IllegalStateException e) {
             System.out.println(e.getMessage());
         }
     }
 
+    /**
+     * retrieveTable
+     * @param mList
+     * @return
+     */
     private ArrayList<Table> retrieveTable(Map<String, String> mList) {
         try {
             ArrayList<Table> arrays = new ArrayList<>();
@@ -353,49 +527,111 @@ public class UIController implements Initializable {
     }
 
     /**
+     * HandleTables
+     * Used to handle user interaction with user application table and windows controls table
+     */
+    public void HandleTables() {
+        try {
+            winEnabledCol.setCellFactory(TextFieldTableCell.<Table>forTableColumn());
+            windowsTable.setOnMouseClicked((MouseEvent event) -> {
+                if (event.getButton().equals(MouseButton.PRIMARY)) {
+                    // if column two (winComEnabled) is selected
+                    if (windowsTable.getFocusModel().getFocusedCell().getColumn() == 1) {
+                        // for both the Enable windows controls and launch on startup, fire() can be called to (de)select the checkbox, which in turn clears the appropriate map and reloads the table
+                        if (windowsTable.getSelectionModel().getTableView().getItems().get(windowsTable.getSelectionModel().getFocusedIndex()).getColumnOne().equals("enable windows controls")) {
+                            winControlsEnabled.fire();
+                        }
+                        if (windowsTable.getSelectionModel().getTableView().getItems().get(windowsTable.getSelectionModel().getFocusedIndex()).getColumnOne().equals("launch on startup")) {
+                            startupEnabled.fire();
+                        } else {
+                            // If the selected rows winEnabledColumn is currently set to false, change it to true
+                            if (windowsTable.getSelectionModel().getTableView().getItems().get(windowsTable.getSelectionModel().getFocusedIndex()).getColumnTwo().equals("false")) {
+                                fileHandler.ChangeWindowsValue(windowsTable.getSelectionModel().getTableView().getItems().get(windowsTable.getSelectionModel().getFocusedIndex()).getColumnOne(), "true");
+                            } else {
+                                fileHandler.ChangeWindowsValue(windowsTable.getSelectionModel().getTableView().getItems().get(windowsTable.getSelectionModel().getFocusedIndex()).getColumnOne(), "false");
+                            }
+                            winComMap.clear();
+                            ReloadWinCommandTable();
+                        }
+                    }
+                }
+            });
+
+            userTable.setOnKeyPressed(new EventHandler<KeyEvent>() {
+                @Override
+                public void handle(KeyEvent keyEvent) {
+                    try {
+                        // If the user presses the delete key, we delete the currently selected column/application
+                        if (keyEvent.getCode().equals(KeyCode.DELETE)) {
+                            fileHandler.DeleteUserApp(userTable.getSelectionModel().getTableView().getItems().get(userTable.getSelectionModel().getFocusedIndex()).getColumnOne());
+                            userAppMap.clear();
+                            ReloadUserAppTable();
+                        }
+                    } catch (NullPointerException e) {
+                    } catch (IndexOutOfBoundsException e) {
+                    }
+                }
+            });
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
      * CheckBoxes
      */
     private void CheckBoxes() {
-        startupEnabled.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean t1) {
-                startupIsEnabled = t1;
-                if(startupIsEnabled) {
-                    fileHandler.ChangeWindowsValue("launch on startup", "true");
-                    System.out.println("launch on startup enabled");
-                } else {
-                    fileHandler.ChangeWindowsValue("launch on startup", "false");
-                    System.out.println("launch on startup disabled");
+        try {
+            startupEnabled.selectedProperty().addListener(new ChangeListener<Boolean>() {
+                @Override
+                public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean t1) {
+                    if (t1) {
+                        fileHandler.ChangeWindowsValue("launch on startup", "true");
+                        startupEnabled.setSelected(true);
+                        startupIsEnabled = true;
+                    } else {
+                        fileHandler.ChangeWindowsValue("launch on startup", "false");
+                        startupEnabled.setSelected(false);
+                        startupIsEnabled = false;
+                    }
+                    ReloadWinCommandTable();
+                }
+            });
+
+            winControlsEnabled.selectedProperty().addListener(new ChangeListener<Boolean>() {
+                @Override
+                public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean t1) {
+                    try {
+                        winCommandsAreEnabled = t1;
+                        if (winCommandsAreEnabled) {
+                            winCommandsAreEnabled = true;
+                            fileHandler.ChangeWindowsValue("enable windows controls", "true");
+                            windowsTab.setDisable(false);
+                        } else {
+                            winCommandsAreEnabled = false;
+                            fileHandler.ChangeWindowsValue("enable windows controls", "false");
+                            windowsTab.setDisable(true);
+                            tabs.getSelectionModel().select(userTab);
+                            //userTab.getContent().requestFocus(); // userTab = null for some reason, which is why we cant get it to switch focus to userTab...
+                        }
+                        ReloadWinCommandTable();
+                    } catch (NullPointerException e) {
+                        System.out.println("FUCK");
+                    }
+                }
+            });
+
+            for (Map.Entry entry : winComMap.entrySet()) {
+                if (entry.getKey().equals("launch on startup") && entry.getValue().equals("true")) {
+                    startupEnabled.setSelected(true);
+                }
+
+                if (entry.getKey().equals("enable windows controls") && entry.getValue().equals("true")) {
+                    winControlsEnabled.setSelected(true);
                 }
             }
-        });
-
-        winControlsEnabled.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean t1) {
-                winCommandsAreEnabled = t1;
-                if (winCommandsAreEnabled) {
-                    System.out.println("windows commands enabled");
-                    winCommandsAreEnabled = true;
-                    fileHandler.ChangeWindowsValue("enable windows controls", "true");
-                    windowsTab.setDisable(false);
-                } else {
-                    System.out.println("windows commands disabled");
-                    winCommandsAreEnabled = false;
-                    fileHandler.ChangeWindowsValue("enable windows controls", "false");
-                    windowsTab.setDisable(true);
-                }
-            }
-        });
-
-        for (Map.Entry entry : winComMap.entrySet()) {
-            if (entry.getKey().equals("launch on startup") && entry.getValue().equals("true")) {
-                startupEnabled.setSelected(true);
-            }
-
-            if (entry.getKey().equals("enable windows controls") && entry.getValue().equals("true")) {
-                winControlsEnabled.setSelected(true);
-            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -406,19 +642,40 @@ public class UIController implements Initializable {
     }
 
     /**
+     * APITextField
      * We have a key event listener assigned to check if the user presses Enter.
      * If they do we take the characters in the text box and assign it as the API key in the FileHandler class and settings file.
      */
     private void APITextField() {
-        pushbulletKeyTextBox.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent ke) {
-                if (ke.getCode().equals(KeyCode.ENTER)) {
-                    System.out.println(pushbulletKeyTextBox.getCharacters().toString());
-                    fileHandler.SetAPIKey(pushbulletKeyTextBox.getCharacters().toString());
+        try {
+            pushbulletKeyTextBox.setOnKeyPressed(new EventHandler<KeyEvent>() {
+                @Override
+                public void handle(KeyEvent ke) {
+                    if (ke.getCode().equals(KeyCode.ENTER)) {
+                        fileHandler.SetAPIKey(pushbulletKeyTextBox.getCharacters().toString());
+                    }
                 }
+            });
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * SetKeyButtonSelected
+     * @param event
+     * Called when the SetKeyButton is pressed
+     * Sets the API key - NOTE: pressing Enter while in the text field does the same.
+     */
+    @FXML
+    void SetKeyButtonSelected(ActionEvent event) {
+        try {
+            if (!pushbulletKeyTextBox.getText().isEmpty()) {
+                fileHandler.SetAPIKey(pushbulletKeyTextBox.getCharacters().toString());
             }
-        });
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /**
@@ -437,17 +694,23 @@ public class UIController implements Initializable {
      */
     @FXML
     void StartApp(ActionEvent event) {
-        if(StartButton.getText().equals("Start")) {
-            System.out.println("Starting pushbullet listener...");
-            cProcessor = new CommandProcessor(fileHandler, this);
-            pReceiver = new PushReceiver(cProcessor, fileHandler);
-            StartButton.setText("Stop");
-        } else if(StartButton.getText().equals("Stop")) {
-            System.out.println("Stopping pushbullet listener...");
-            StartButton.setText("Start");
-            pReceiver.StopListening();
-            pReceiver = null;
-            cProcessor = null;
+        try {
+            if (StartButton.getText().equals("Start")) {
+                if (fileHandler.GetAPIKey().equals("Enter Pushbullet Key Here")) {
+                    NotificationWindow n = new NotificationWindow("Notice", "Pushbullet", "Change your pushbullet API Key");
+                } else {
+                    cProcessor = new CommandProcessor(fileHandler, this);
+                    pReceiver = new PushReceiver(cProcessor, fileHandler);
+                    StartButton.setText("Stop");
+                }
+
+            } else if (StartButton.getText().equals("Stop")) {
+                StartButton.setText("Start");
+                pReceiver.StopListening();
+                pReceiver = null;
+                cProcessor = null;
+            }
+        } catch(Exception e) {
         }
     }
 
@@ -464,7 +727,8 @@ public class UIController implements Initializable {
             ap.SetUI(this);
             Stage primaryStage = new Stage();
             primaryStage.setTitle("Add Application");
-            Pane myPane = (Pane) FXMLLoader.load(getClass().getResource("AddApplicationUI.fxml"));
+            primaryStage.setResizable(false);
+            Pane myPane = (Pane) FXMLLoader.load(getClass().getResource("../addapplication/AddApplicationUI.fxml"));
             primaryStage.getIcons().add(new Image("deps//icon.png"));
 
             Scene myScene = new Scene(myPane);
@@ -501,9 +765,11 @@ public class UIController implements Initializable {
      */
     @FXML
     void LaunchOnStartup(ActionEvent event) {
-
     }
 
+    /**
+     * setOnSelectionChanged
+     */
     @FXML
     private void setOnSelectionChanged() {
     }
