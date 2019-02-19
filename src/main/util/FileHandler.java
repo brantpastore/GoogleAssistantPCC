@@ -43,7 +43,7 @@ public class FileHandler {
     private static String API_KEY = "";
     // TODO:
     // Change the config location to the directory our application is located
-    private static String settingsFilePath = "src//deps//settings.cfg";
+    private static String settingsFilePath = "deps/settings.cfg";
     public static Map<String, String> winCommands = new HashMap<>();
     public static Map<String, String> appList = new HashMap<>();
 
@@ -83,7 +83,7 @@ public class FileHandler {
     /**
      * LoadSettingsFile
      * @param newFile
-     * Replaces the src/deps/settings.cfg with the user specified newFile
+     * Replaces the deps/settings.cfg with the user specified newFile
      */
     public static void LoadSettingsFile(File newFile) {
         try {
@@ -115,7 +115,7 @@ public class FileHandler {
     public void ResetSettingsFile() {
         try {
             File inputFile = new File(settingsFilePath);
-            File defaultFile = new File("src//deps//default_settings.cfg");
+            File defaultFile = new File("deps//default_settings.cfg");
             Files.copy(defaultFile.toPath(), inputFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
             inputFile = new File(settingsFilePath);
             this.LoadSettingsFile(inputFile);
@@ -145,6 +145,32 @@ public class FileHandler {
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    public boolean isEnabled(String trigger) {
+        try {
+            NodeList settingsList = doc.getElementsByTagName("Setting");
+
+            for (int index = 0; index < settingsList.getLength(); index++) {
+                Node tempNode = settingsList.item(index);
+
+                if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) tempNode;
+                    if (eElement.hasAttribute("type") && eElement.getAttribute("type").equals("windows")) {
+                        if (eElement.getElementsByTagName("trigger").item(0).getTextContent().equals(trigger)) {
+                            if(eElement.getElementsByTagName("enabled").item(0).getTextContent().equals("true")) {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            fLogger.info(e.getMessage());
+        }
+        return false;
     }
 
     /**

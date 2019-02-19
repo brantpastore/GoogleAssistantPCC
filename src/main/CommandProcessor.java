@@ -2,6 +2,7 @@ package main;
 
 import main.util.FileHandler;
 import main.view.main.UIController;
+import main.view.notification.NotificationWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,35 +13,29 @@ import java.io.*;
 /**
  * CommandController
  * Processes the command given to us by the PushReceiver class
- *
- * TODO:
- * Logging (Error, event, Process)
- * Read/Writing from the application
- * [DONE] Remove the hard-coded launching of apps, so were able to have users easily launch their own custom applications.
- * [DONE] Enable/Disable certain commands based off of user preferences
- *
- * Expand upon the list of windows commands
  */
 public class CommandProcessor {
     private static final Logger cpLogger = LoggerFactory.getLogger(CommandProcessor.class);
-    private static Process nirProc = null;
-
-    static File fileLog = new File("src/deps/GoogleAssistantPCC.log");
+    static File fileLog = new File("deps/logs/GoogleAssistantPCC.log");
 
     private static FileHandler fHandler = null;
+    private static WindowsPSCommander winCommander = null;
     private static UIController ui = null;
 
-    public CommandProcessor(FileHandler ifHandler, UIController uiC) {
+    public CommandProcessor(FileHandler ifHandler, WindowsPSCommander wpC, UIController uiC) {
         fHandler = ifHandler;
+        winCommander = wpC;
         ui = uiC;
+    }
+
+    public UIController GetUI() {
+        return ui;
     }
 
     /**
      * ProcessPush
-     * @param command
-     * Proccesses the command sent to use by PushReceiver.
-     * TODO:
-     *     Popup notifying the user windows commands arent enabled if a windows command trigger is used
+     *
+     * @param command Proccesses the command sent to use by PushReceiver.
      */
     public static void ProcessPush(String command) {
         cpLogger.info(command);
@@ -48,17 +43,31 @@ public class CommandProcessor {
             if (fHandler.GetAppList().containsKey(command)) {
                 cpLogger.info("Found trigger: " + command);
                 try {
-                    nirProc = new ProcessBuilder("src/deps/nircmd.exe", "exec", "show", fHandler.GetAppList().get(command).toString()).start();
-                } catch (IOException e) {
+                    winCommander.RunExecutable(fHandler.GetAppList().get(command).toString());
+                } catch (Exception e) {
                     cpLogger.info(e.getMessage());
                 }
             }
         }
 
-        for (int index = 0; index < fHandler.GetWinCommands().size(); index++) {
-            if (fHandler.GetWinCommands().containsKey(command)) {
-                if (ui.WindowsCommandsEnabled()) {
-                    if (command.equals("open the start menu")) {
+        if (ui.WindowsCommandsEnabled()) {
+            for (int index = 0; index < fHandler.GetWinCommands().size(); index++) {
+                if (fHandler.GetWinCommands().containsKey(command) && fHandler.isEnabled(command)) {
+                    if (command.equals("Shutdown")) {
+                        winCommander.Shutdown();
+                    } else if (command.equals("restart")) {
+                        winCommander.Restart();
+                    } else if (command.equals("log out")) {
+                        winCommander.Logout();
+                    } else if (command.equals("lock")) {
+                        winCommander.LockPC();
+                    } else if (command.equals("go to sleep")) {
+                        winCommander.Sleep();
+                    } else if (command.equals("mute")) {
+                        winCommander.Mute();
+                    } else if (command.equals("unmute")) {
+                        winCommander.Unmute();
+                    } else if (command.equals("open the start menu")) { // TODO: a better way to do this.
                         GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
                         try {
                             Robot robo = new Robot(gd);

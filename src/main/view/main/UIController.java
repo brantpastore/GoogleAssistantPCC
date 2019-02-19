@@ -22,9 +22,11 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.util.Callback;
 import main.CommandProcessor;
 import main.PushReceiver;
+import main.WindowsPSCommander;
 import main.util.FileHandler;
 import main.view.EditingCell;
 import main.view.Table;
@@ -46,9 +48,11 @@ import static javafx.collections.FXCollections.observableArrayList;
  * UIController
  */
 public class UIController implements Initializable {
-    private static FileHandler fileHandler;
-    private static CommandProcessor cProcessor;
-    private static PushReceiver pReceiver;
+    private static FileHandler fileHandler = null;
+    private static CommandProcessor cProcessor = null;
+    private static PushReceiver pReceiver = null;
+
+    private static WindowsPSCommander winPSCommander = null;
 
     private static String api_key = "";
     private static Map<String, String> winComMap = new HashMap<>();
@@ -207,6 +211,17 @@ public class UIController implements Initializable {
     private Button addUserAppButton;
 
     /**
+     * ProgressIndicator
+     * Used to show the status of starting the app (Aka running the pushbullet listener)
+     */
+    @FXML
+    private ProgressIndicator progressIndicator;
+
+    public void SetProgressIndicator(double val) {
+        progressIndicator.setProgress(val);
+    }
+
+    /**
      * tabs
      */
     @FXML
@@ -223,8 +238,9 @@ public class UIController implements Initializable {
      * @param applicationList
      * we initialize filehandler, set the api string, and populate the winCmdMap and userAppMap
      */
-    public UIController(FileHandler fh, String api, Map winCmdList, Map applicationList) {
+    public UIController(FileHandler fh, WindowsPSCommander wiPC, String api, Map winCmdList, Map applicationList) {
         this.fileHandler = fh;
+        this.winPSCommander = wiPC;
         this.api_key = api;
         this.winComMap.putAll(winCmdList);
         this.userAppMap.putAll(applicationList);
@@ -692,7 +708,7 @@ public class UIController implements Initializable {
                 if (fileHandler.GetAPIKey().equals("Enter Pushbullet Key Here")) {
                     NotificationWindow n = new NotificationWindow("Notice", "Pushbullet", "Change your pushbullet API Key");
                 } else {
-                    cProcessor = new CommandProcessor(fileHandler, this);
+                    cProcessor = new CommandProcessor(fileHandler, winPSCommander, this);
                     pReceiver = new PushReceiver(cProcessor, fileHandler);
                     StartButton.setText("Stop");
                 }
@@ -768,5 +784,10 @@ public class UIController implements Initializable {
      */
     @FXML
     private void setOnSelectionChanged() {
+    }
+
+    @FXML
+    public void ChangeProgress() {
+        
     }
 }

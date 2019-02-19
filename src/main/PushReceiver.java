@@ -34,7 +34,9 @@ public class PushReceiver implements PushbulletListener {
 
     public void StopListening() {
         client.removePushBulletListener(listener);
+        cProcessor.GetUI().SetProgressIndicator(50.00d);
         client.stopWebsocket();
+        cProcessor.GetUI().SetProgressIndicator(0.00d);
     }
 
     /**
@@ -45,6 +47,7 @@ public class PushReceiver implements PushbulletListener {
     public void StartListening() throws PushbulletException, InterruptedException {
         try {
             client = new PushbulletClient(AccessToken);
+            cProcessor.GetUI().SetProgressIndicator(35.00d);
             client.addPushbulletListener(listener = new PushbulletListener() {
 
                 /**
@@ -64,6 +67,7 @@ public class PushReceiver implements PushbulletListener {
                     } catch (PushbulletException e) {
                         System.out.println(e.getMessage());
                         NotificationWindow n = new NotificationWindow("Error", "Error", e.getMessage());
+                        cProcessor.GetUI().SetProgressIndicator(0.00d);
                     }
                 }
 
@@ -78,7 +82,9 @@ public class PushReceiver implements PushbulletListener {
             });
 
             prLogger.info("Starting websocket...");
+            cProcessor.GetUI().SetProgressIndicator(55.00d);
             client.startWebsocket();
+            cProcessor.GetUI().SetProgressIndicator(100.00d);
         } catch(Exception e) {
             prLogger.info(e.getMessage());
         }
