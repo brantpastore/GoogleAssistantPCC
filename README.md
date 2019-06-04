@@ -1,6 +1,5 @@
 # GoogleAssistantPCC
-An open source PC controller using Google Assistant.
-<<<<<<< HEAD
+An open source Google voice assistant PC Application launcher using Google Assistant.
 
 Setup
 Create a https://www.pushbullet.com/ account.
@@ -28,6 +27,3 @@ Search for Pushbullet
 select Push a note
 Title it your PC
 Select Create Action.
-
-=======
->>>>>>> 249bae5... Initial commit
